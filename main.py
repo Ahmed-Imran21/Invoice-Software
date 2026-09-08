@@ -5,10 +5,13 @@ buttons: Inventory and Make Invoice. Run this file to start the app.
 """
 
 import tkinter as tk
+from tkinter import messagebox
 
 import database
 from config import APP_TITLE, ICON_PATH
 from inventory_screen import InventoryScreen
+import ui_style as style
+from invoice_screen import InvoiceScreen
 
 # invoice_screen isn't built yet — import it once it exists, then
 # uncomment the "Make Invoice" button logic below.
@@ -20,7 +23,7 @@ class App(tk.Tk):
         super().__init__()
         self.title(APP_TITLE)
         self.geometry("900x600")
-        self.configure(bg="white")
+        self.configure(bg=style.COLOR_BG)
 
         # Set the window/taskbar icon, if present
         try:
@@ -41,26 +44,23 @@ class App(tk.Tk):
     def _show_home(self):
         self._clear_screen()
 
-        home = tk.Frame(self, bg="white")
+        home = tk.Frame(self, bg=style.COLOR_BG)
         home.pack(fill="both", expand=True)
 
         tk.Label(
-            home, text=APP_TITLE, font=("Segoe UI", 26, "bold"), bg="white"
+            home, text=APP_TITLE, font=style.FONT_TITLE,
+            bg=style.COLOR_BG, fg=style.COLOR_TEXT
         ).pack(pady=(80, 40))
 
-        button_frame = tk.Frame(home, bg="white")
+        button_frame = tk.Frame(home, bg=style.COLOR_BG)
         button_frame.pack()
 
-        tk.Button(
-            button_frame, text="📦 Inventory", font=("Segoe UI", 18, "bold"),
-            fg="white", bg="#1565c0", relief="flat", width=16, height=3,
-            command=self._show_inventory
+        style.make_big_nav_button(
+            button_frame, "📦 Inventory", self._show_inventory, style.COLOR_PRIMARY
         ).grid(row=0, column=0, padx=20)
 
-        tk.Button(
-            button_frame, text="🧾 Make Invoice", font=("Segoe UI", 18, "bold"),
-            fg="white", bg="#2e7d32", relief="flat", width=16, height=3,
-            command=self._show_invoice
+        style.make_big_nav_button(
+            button_frame, "🧾 Make Invoice", self._show_invoice, style.COLOR_SUCCESS
         ).grid(row=0, column=1, padx=20)
 
         self.current_screen = home
@@ -70,15 +70,11 @@ class App(tk.Tk):
         self.current_screen = InventoryScreen(self, on_back=self._show_home)
         self.current_screen.pack(fill="both", expand=True)
 
+
     def _show_invoice(self):
-        # Placeholder until invoice_screen.py is built.
-        # Once it exists, replace this with:
-        #   self._clear_screen()
-        #   self.current_screen = InvoiceScreen(self, on_back=self._show_home)
-        #   self.current_screen.pack(fill="both", expand=True)
-        tk.messagebox_shown = True
-        from tkinter import messagebox
-        messagebox.showinfo("Coming soon", "The invoice screen isn't built yet.")
+        self._clear_screen()
+        self.current_screen = InvoiceScreen(self, on_back=self._show_home)
+        self.current_screen.pack(fill="both", expand=True)
 
 
 if __name__ == "__main__":

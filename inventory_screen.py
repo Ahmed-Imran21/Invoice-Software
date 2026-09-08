@@ -46,9 +46,7 @@ class InventoryScreen(tk.Frame):
         style.make_label(search_frame, "Search:").pack(side="left")
         self.search_var = tk.StringVar()
         self.search_var.trace_add("write", lambda *_: self._refresh_item_list())
-        tk.Entry(
-            search_frame, textvariable=self.search_var, font=style.FONT_LABEL, width=30
-        ).pack(side="left", padx=10)
+        style.make_entry(search_frame, textvariable=self.search_var, width=30).pack(side="left", padx=10)
 
         # Item list (table)
         list_frame = tk.Frame(self)
@@ -167,7 +165,7 @@ class NewItemDialog(tk.Toplevel):
 
         for key, label in fields:
             style.make_label(self, label).pack(pady=(12, 2))
-            entry = tk.Entry(self, font=style.FONT_LABEL, width=25)
+            entry = style.make_entry(self, width=25)
             entry.pack()
             self.entries[key] = entry
 

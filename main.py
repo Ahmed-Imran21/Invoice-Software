@@ -24,6 +24,7 @@ class App(tk.Tk):
         self.title(APP_TITLE)
         self.geometry("900x600")
         self.configure(bg=style.COLOR_BG)
+        style.init_scaling(self)
 
         # Set the window/taskbar icon, if present
         try:
@@ -48,7 +49,7 @@ class App(tk.Tk):
         home.pack(fill="both", expand=True)
 
         tk.Label(
-            home, text=APP_TITLE, font=style.FONT_TITLE,
+            home, text=APP_TITLE, font=style.FONTS["title"],
             bg=style.COLOR_BG, fg=style.COLOR_TEXT
         ).pack(pady=(80, 40))
 

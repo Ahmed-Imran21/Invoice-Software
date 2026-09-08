@@ -133,10 +133,7 @@ class InvoiceScreen(tk.Frame):
             value_label.pack(side="right")
             self.totals_labels[key] = value_label
 
-        style.make_button(
-            panel, "🖨 Save & Print Invoice", self._save_and_print, color=style.COLOR_PRIMARY,
-            font=style.FONT_BUTTON_LARGE
-        ).pack(fill="x", pady=15)
+        style.make_button(panel, "🖨 Save & Print Invoice", self._save_and_print, color=style.COLOR_PRIMARY, font_key="button_large")
 
     def _make_form_row(self, parent, label_text, var):
         row = tk.Frame(parent, bg=style.COLOR_BG)

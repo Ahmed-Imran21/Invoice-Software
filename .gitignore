@@ -1,0 +1,28 @@
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Conda / virtual environments
+.conda/
+venv/
+env/
+*.egg-info/
+
+# VS Code
+.vscode/
+
+# PyInstaller build output
+build/
+dist/
+
+# Local data — this is real business data, not code
+data/inventory.db
+data/invoices/
+
+# OS clutter
+Thumbs.db
+.DS_Store
+
+# Logs
+*.log

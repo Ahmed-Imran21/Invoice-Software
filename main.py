@@ -9,6 +9,7 @@ import tkinter as tk
 from tkinter import messagebox
 
 import database
+import backup
 from config import APP_TITLE, ICON_PATH
 from inventory_screen import InventoryScreen
 from invoice_screen import InvoiceScreen
@@ -83,5 +84,6 @@ class App(tk.Tk):
 
 if __name__ == "__main__":
     database.init_db()
+    backup.run_daily_backup()
     app = App()
     app.mainloop()

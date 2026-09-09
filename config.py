@@ -25,6 +25,10 @@ LOGO_PATH = ASSETS_DIR / "logo.png"
 DATA_DIR.mkdir(exist_ok=True)
 INVOICES_DIR.mkdir(exist_ok=True)
 
+BACKUP_DIR = DATA_DIR / "backups"
+BACKUP_DIR.mkdir(exist_ok=True)
+BACKUP_RETENTION_DAYS = 30
+
 # ---------- Invoice defaults ----------
 DEFAULT_TAX_PERCENT = 0.0
 DEFAULT_DISCOUNT_PERCENT = 0.0

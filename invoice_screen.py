@@ -16,17 +16,12 @@ import ui_style as style
 import invoice_generator
 
 
-# invoice_generator isn't built yet — import it once it exists, then
-# call it from _save_and_print() instead of just showing a message.
-# import invoice_generator
-
-
 class InvoiceScreen(tk.Frame):
     def __init__(self, parent, on_back=None):
         super().__init__(parent, bg=style.COLOR_BG)
         self.on_back = on_back
         self.selected_catalog_item_id = None
-        self.invoice_lines = []  # list of InvoiceItem currently on this invoice
+        self.invoice_lines = []
 
         self._build_layout()
         self._refresh_catalog_list()
@@ -55,7 +50,6 @@ class InvoiceScreen(tk.Frame):
         self._build_invoice_panel(body)
 
     def _build_catalog_panel(self, parent):
-        """Left side: pick an item from stock and add it to the invoice."""
         panel = tk.Frame(parent, bg=style.COLOR_BG)
         panel.pack(side="left", fill="both", expand=True, padx=(0, 15))
 
@@ -63,9 +57,7 @@ class InvoiceScreen(tk.Frame):
 
         self.catalog_search_var = tk.StringVar()
         self.catalog_search_var.trace_add("write", lambda *_: self._refresh_catalog_list())
-        tk.Entry(
-            panel, textvariable=self.catalog_search_var, font=style.FONT_LABEL
-        ).pack(fill="x", pady=8)
+        style.make_entry(panel, textvariable=self.catalog_search_var).pack(fill="x", pady=8)
 
         columns = ("code", "name", "rate", "stock")
         self.catalog_tree = ttk.Treeview(panel, columns=columns, show="headings", height=14)
@@ -82,7 +74,6 @@ class InvoiceScreen(tk.Frame):
         ).pack(fill="x", pady=10)
 
     def _build_invoice_panel(self, parent):
-        """Right side: the invoice being built — line items, customer info, totals."""
         panel = tk.Frame(parent, bg=style.COLOR_BG)
         panel.pack(side="left", fill="both", expand=True)
 
@@ -101,7 +92,6 @@ class InvoiceScreen(tk.Frame):
             panel, "Remove Selected Item", self._remove_line_item, color=style.COLOR_DANGER
         ).pack(fill="x", pady=(0, 10))
 
-        # Customer info
         form = tk.Frame(panel, bg=style.COLOR_BG)
         form.pack(fill="x", pady=5)
         self.customer_name_var = tk.StringVar()
@@ -109,7 +99,6 @@ class InvoiceScreen(tk.Frame):
         self._make_form_row(form, "Customer Name", self.customer_name_var)
         self._make_form_row(form, "Contact", self.customer_contact_var)
 
-        # Discount / Tax
         percent_frame = tk.Frame(panel, bg=style.COLOR_BG)
         percent_frame.pack(fill="x", pady=10)
 
@@ -121,7 +110,6 @@ class InvoiceScreen(tk.Frame):
         self._make_percent_field(percent_frame, "Discount %", self.discount_var)
         self._make_percent_field(percent_frame, "Tax %", self.tax_var)
 
-        # Totals display
         self.totals_frame = tk.Frame(panel, bg=style.COLOR_BG)
         self.totals_frame.pack(fill="x", pady=10)
         self.totals_labels = {}
@@ -133,19 +121,22 @@ class InvoiceScreen(tk.Frame):
             value_label.pack(side="right")
             self.totals_labels[key] = value_label
 
-        style.make_button(panel, "🖨 Save & Print Invoice", self._save_and_print, color=style.COLOR_PRIMARY, font_key="button_large")
+        style.make_button(
+            panel, "🖨 Save & Print Invoice", self._save_and_print,
+            color=style.COLOR_PRIMARY, font_key="button_large"
+        ).pack(fill="x", pady=15)
 
     def _make_form_row(self, parent, label_text, var):
         row = tk.Frame(parent, bg=style.COLOR_BG)
         row.pack(fill="x", pady=3)
         style.make_label(row, label_text).pack(side="left")
-        tk.Entry(row, textvariable=var, font=style.FONT_LABEL).pack(side="right", fill="x", expand=True, padx=10)
+        style.make_entry(row, textvariable=var).pack(side="right", fill="x", expand=True, padx=10)
 
     def _make_percent_field(self, parent, label_text, var):
         row = tk.Frame(parent, bg=style.COLOR_BG)
         row.pack(side="left", padx=(0, 20))
         style.make_label(row, label_text).pack(side="left")
-        tk.Entry(row, textvariable=var, font=style.FONT_LABEL, width=6).pack(side="left", padx=5)
+        style.make_entry(row, textvariable=var, width=6).pack(side="left", padx=5)
 
     # ------------------------------------------------------------------
     # CATALOG (left side)
@@ -253,14 +244,13 @@ class InvoiceScreen(tk.Frame):
             messagebox.showerror("Could not save invoice", str(e))
             return
 
-
+        invoice.invoice_number = invoice.invoice_number or database.get_next_invoice_number() - 1
         filepath = invoice_generator.generate_and_print(invoice)
         messagebox.showinfo(
             "Invoice Saved",
             f"Invoice saved, stock updated, and sent to printer.\nNet Total: {invoice.net_total:.2f}"
         )
 
-        # Reset for the next invoice
         self.invoice_lines = []
         self.customer_name_var.set("")
         self.customer_contact_var.set("")

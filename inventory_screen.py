@@ -27,7 +27,6 @@ class InventoryScreen(tk.Frame):
     # ------------------------------------------------------------------
 
     def _build_layout(self):
-        # Top bar: title + back button
         top_bar = tk.Frame(self, bg=style.COLOR_BG)
         top_bar.pack(fill="x", padx=20, pady=15)
 
@@ -39,7 +38,6 @@ class InventoryScreen(tk.Frame):
 
         style.make_heading(top_bar, "Inventory").pack(side="left", padx=20)
 
-        # Search bar
         search_frame = tk.Frame(self, bg=style.COLOR_BG)
         search_frame.pack(fill="x", padx=20, pady=(0, 10))
 
@@ -48,7 +46,6 @@ class InventoryScreen(tk.Frame):
         self.search_var.trace_add("write", lambda *_: self._refresh_item_list())
         style.make_entry(search_frame, textvariable=self.search_var, width=30).pack(side="left", padx=10)
 
-        # Item list (table)
         list_frame = tk.Frame(self)
         list_frame.pack(fill="both", expand=True, padx=20, pady=10)
 
@@ -67,7 +64,6 @@ class InventoryScreen(tk.Frame):
 
         style.apply_treeview_style(ttk.Style())
 
-        # Action buttons
         action_frame = tk.Frame(self, bg=style.COLOR_BG)
         action_frame.pack(fill="x", padx=20, pady=15)
 
@@ -150,9 +146,9 @@ class NewItemDialog(tk.Toplevel):
         super().__init__(parent)
         self.on_saved = on_saved
         self.title("New Item")
-        self.geometry("360x360")
-        self.resizable(False, False)
         self.configure(bg=style.COLOR_BG)
+        self.resizable(True, True)
+        self.minsize(360, 420)
 
         self.entries = {}
         fields = [
@@ -163,15 +159,26 @@ class NewItemDialog(tk.Toplevel):
             ("stock_qty", "Starting Stock Quantity"),
         ]
 
+        form = tk.Frame(self, bg=style.COLOR_BG)
+        form.pack(fill="both", expand=True, padx=20, pady=15)
+
         for key, label in fields:
-            style.make_label(self, label).pack(pady=(12, 2))
-            entry = style.make_entry(self, width=25)
-            entry.pack()
+            style.make_label(form, label).pack(pady=(10, 2), anchor="w")
+            entry = style.make_entry(form, width=28)
+            entry.pack(fill="x")
             self.entries[key] = entry
 
         style.make_button(
             self, "Save Item", self._save, color=style.COLOR_PRIMARY
-        ).pack(pady=20)
+        ).pack(pady=20, padx=20, fill="x")
+
+        # Auto-size to fit its actual content, then center over the parent window
+        self.update_idletasks()
+        width = max(self.winfo_reqwidth(), 360)
+        height = self.winfo_reqheight()
+        px = parent.winfo_rootx() + (parent.winfo_width() // 2) - (width // 2)
+        py = parent.winfo_rooty() + (parent.winfo_height() // 2) - (height // 2)
+        self.geometry(f"{width}x{height}+{px}+{py}")
 
     def _save(self):
         code = self.entries["code"].get().strip()

@@ -244,12 +244,21 @@ class InvoiceScreen(tk.Frame):
             messagebox.showerror("Could not save invoice", str(e))
             return
 
-        invoice.invoice_number = invoice.invoice_number or database.get_next_invoice_number() - 1
-        filepath = invoice_generator.generate_and_print(invoice)
-        messagebox.showinfo(
-            "Invoice Saved",
-            f"Invoice saved, stock updated, and sent to printer.\nNet Total: {invoice.net_total:.2f}"
-        )
+        try:
+            filepath, print_status = invoice_generator.generate_and_print(invoice)
+            messagebox.showinfo(
+                "Invoice Saved",
+                f"Invoice saved and stock updated.\nNet Total: {invoice.net_total:.2f}\n\n{print_status}"
+            )
+        except Exception as e:
+            # The invoice + stock deduction already succeeded at this point —
+            # only the print step failed, so say that clearly rather than
+            # implying the whole invoice was lost.
+            messagebox.showerror(
+                "Invoice saved, but printing failed",
+                f"The invoice was saved and stock was updated, but the PDF could not be "
+                f"opened/printed automatically.\n\nError: {e}"
+            )
 
         self.invoice_lines = []
         self.customer_name_var.set("")

@@ -147,7 +147,7 @@ class NewItemDialog(tk.Toplevel):
         self.on_saved = on_saved
         self.title("New Item")
         self.configure(bg=style.COLOR_BG)
-        self.resizable(True, True)
+        self.resizable(True, True)  # let the user resize/scale if their font size is large
         self.minsize(360, 420)
 
         self.entries = {}
@@ -172,7 +172,8 @@ class NewItemDialog(tk.Toplevel):
             self, "Save Item", self._save, color=style.COLOR_PRIMARY
         ).pack(pady=20, padx=20, fill="x")
 
-        # Auto-size to fit its actual content, then center over the parent window
+        # Auto-size the window to fit its actual content, then center it
+        # over the parent window instead of relying on a guessed geometry.
         self.update_idletasks()
         width = max(self.winfo_reqwidth(), 360)
         height = self.winfo_reqheight()
@@ -198,8 +199,11 @@ class NewItemDialog(tk.Toplevel):
 
         try:
             database.add_item(Item(name=name, code=code, unit=unit, unit_rate=unit_rate, stock_qty=stock_qty))
-        except Exception as e:
-            messagebox.showerror("Could not save", f"Item code might already exist.\n\n{e}")
+        except database.DuplicateItemCodeError:
+            messagebox.showerror(
+                "Item code already used",
+                f"'{code}' is already in the system. Please enter a different item code."
+            )
             return
 
         self.on_saved()

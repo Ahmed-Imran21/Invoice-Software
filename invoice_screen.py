@@ -2,18 +2,20 @@
 invoice_screen.py
 The invoice creation screen: pick items, set quantity, apply discount%
 and tax%, see live totals, then save + print. Saving automatically
-deducts stock (handled by database.save_invoice()).
+deducts stock (handled by database.save_invoice()). Quantity entry
+and errors use the bigger custom dialogs from dialogs.py.
 """
 
 import tkinter as tk
-from tkinter import ttk, messagebox, simpledialog
+from tkinter import ttk, messagebox
 from datetime import date
 
 import database
+import dialogs
+import invoice_generator
 from config import DEFAULT_DISCOUNT_PERCENT, DEFAULT_TAX_PERCENT
 from models import Invoice, InvoiceItem
 import ui_style as style
-import invoice_generator
 
 
 class InvoiceScreen(tk.Frame):
@@ -162,14 +164,14 @@ class InvoiceScreen(tk.Frame):
     def _add_line_item(self):
         item = self.selected_catalog_item_id
         if item is None:
-            messagebox.showwarning("No item selected", "Please click an item from the list first.")
+            dialogs.show_error(self, "No Item Selected", "Please click an item from the list first.")
             return
 
-        qty = simpledialog.askfloat("Quantity", f"How many of '{item.name}'?", minvalue=0.01)
+        qty = dialogs.ask_quantity(self, "Quantity", f"How many of '{item.name}'?", min_value=0.01)
         if qty is None:
             return
         if qty > item.stock_qty:
-            messagebox.showerror("Not enough stock", f"Only {item.stock_qty:g} available in stock.")
+            dialogs.show_error(self, "Not Enough Stock", f"Only {item.stock_qty:g} available in stock.")
             return
 
         self.invoice_lines.append(InvoiceItem(
@@ -182,7 +184,7 @@ class InvoiceScreen(tk.Frame):
     def _remove_line_item(self):
         selected = self.invoice_tree.selection()
         if not selected:
-            messagebox.showwarning("No item selected", "Select an item in the invoice to remove it.")
+            dialogs.show_error(self, "No Item Selected", "Select an item in the invoice to remove it.")
             return
         index = self.invoice_tree.index(selected[0])
         del self.invoice_lines[index]
@@ -233,7 +235,7 @@ class InvoiceScreen(tk.Frame):
 
     def _save_and_print(self):
         if not self.invoice_lines:
-            messagebox.showwarning("Empty invoice", "Add at least one item before saving.")
+            dialogs.show_error(self, "Empty Invoice", "Add at least one item before saving.")
             return
 
         invoice = self._build_invoice_object()
@@ -241,7 +243,7 @@ class InvoiceScreen(tk.Frame):
         try:
             invoice.invoice_id = database.save_invoice(invoice)
         except ValueError as e:
-            messagebox.showerror("Could not save invoice", str(e))
+            dialogs.show_error(self, "Could Not Save Invoice", str(e))
             return
 
         try:
@@ -251,11 +253,8 @@ class InvoiceScreen(tk.Frame):
                 f"Invoice saved and stock updated.\nNet Total: {invoice.net_total:.2f}\n\n{print_status}"
             )
         except Exception as e:
-            # The invoice + stock deduction already succeeded at this point —
-            # only the print step failed, so say that clearly rather than
-            # implying the whole invoice was lost.
-            messagebox.showerror(
-                "Invoice saved, but printing failed",
+            dialogs.show_error(
+                self, "Invoice Saved, But Printing Failed",
                 f"The invoice was saved and stock was updated, but the PDF could not be "
                 f"opened/printed automatically.\n\nError: {e}"
             )

@@ -2,13 +2,16 @@
 inventory_screen.py
 The inventory management screen: view stock, add/subtract quantities,
 and add brand-new items. No SQL, no typing item IDs — everything is
-click-and-select, built for non-technical users.
+click-and-select, built for non-technical users. Errors use the
+custom dialogs.show_error popup (bigger text + error sound); quantity
+entry uses dialogs.ask_quantity (bigger than tkinter's default).
 """
 
 import tkinter as tk
-from tkinter import ttk, messagebox, simpledialog
+from tkinter import ttk, messagebox
 
 import database
+import dialogs
 from models import Item
 import ui_style as style
 
@@ -108,14 +111,14 @@ class InventoryScreen(tk.Frame):
 
     def _require_selection(self):
         if self.selected_item_id is None:
-            messagebox.showwarning("No item selected", "Please click an item in the list first.")
+            dialogs.show_error(self, "No Item Selected", "Please click an item in the list first.")
             return False
         return True
 
     def _add_stock(self):
         if not self._require_selection():
             return
-        qty = simpledialog.askfloat("Add Stock", "How much stock are you adding?", minvalue=0.01)
+        qty = dialogs.ask_quantity(self, "Add Stock", "How much stock are you adding?", min_value=0.01)
         if qty is None:
             return
         database.adjust_stock(self.selected_item_id, qty, reason="Manual Add")
@@ -125,7 +128,7 @@ class InventoryScreen(tk.Frame):
     def _subtract_stock(self):
         if not self._require_selection():
             return
-        qty = simpledialog.askfloat("Subtract Stock", "How much stock are you removing?", minvalue=0.01)
+        qty = dialogs.ask_quantity(self, "Subtract Stock", "How much stock are you removing?", min_value=0.01)
         if qty is None:
             return
         try:
@@ -133,7 +136,7 @@ class InventoryScreen(tk.Frame):
             self._refresh_item_list()
             messagebox.showinfo("Done", "Stock updated successfully.")
         except ValueError as e:
-            messagebox.showerror("Not enough stock", str(e))
+            dialogs.show_error(self, "Not Enough Stock", str(e))
 
     def _new_item(self):
         NewItemDialog(self, on_saved=self._refresh_item_list)
@@ -147,7 +150,7 @@ class NewItemDialog(tk.Toplevel):
         self.on_saved = on_saved
         self.title("New Item")
         self.configure(bg=style.COLOR_BG)
-        self.resizable(True, True)  # let the user resize/scale if their font size is large
+        self.resizable(True, True)
         self.minsize(360, 420)
 
         self.entries = {}
@@ -172,13 +175,12 @@ class NewItemDialog(tk.Toplevel):
             self, "Save Item", self._save, color=style.COLOR_PRIMARY
         ).pack(pady=20, padx=20, fill="x")
 
-        # Auto-size the window to fit its actual content, then center it
-        # over the parent window instead of relying on a guessed geometry.
         self.update_idletasks()
         width = max(self.winfo_reqwidth(), 360)
         height = self.winfo_reqheight()
-        px = parent.winfo_rootx() + (parent.winfo_width() // 2) - (width // 2)
-        py = parent.winfo_rooty() + (parent.winfo_height() // 2) - (height // 2)
+        ref = parent.winfo_toplevel()
+        px = ref.winfo_rootx() + (ref.winfo_width() // 2) - (width // 2)
+        py = ref.winfo_rooty() + (ref.winfo_height() // 2) - (height // 2)
         self.geometry(f"{width}x{height}+{px}+{py}")
 
     def _save(self):
@@ -187,24 +189,24 @@ class NewItemDialog(tk.Toplevel):
         unit = self.entries["unit"].get().strip()
 
         if not code or not name:
-            messagebox.showwarning("Missing info", "Item code and name are required.")
+            dialogs.show_error(self, "Missing Info", "Item code and name are required.")
             return
 
         try:
             unit_rate = float(self.entries["unit_rate"].get())
             stock_qty = float(self.entries["stock_qty"].get() or 0)
         except ValueError:
-            messagebox.showwarning("Invalid number", "Rate and stock quantity must be numbers.")
+            dialogs.show_error(self, "Invalid Number", "Rate and stock quantity must be numbers.")
             return
 
         try:
             database.add_item(Item(name=name, code=code, unit=unit, unit_rate=unit_rate, stock_qty=stock_qty))
         except database.DuplicateItemCodeError:
-            messagebox.showerror(
-                "Item code already used",
+            dialogs.show_error(
+                self, "Item Code Already Used",
                 f"'{code}' is already in the system. Please enter a different item code."
             )
-            return
+            return  # dialog stays open, fields untouched — just fix the code and retry
 
         self.on_saved()
         self.destroy()

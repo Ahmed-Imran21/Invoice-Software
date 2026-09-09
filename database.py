@@ -194,6 +194,21 @@ def get_next_invoice_number() -> int:
         conn.close()
 
 
+def get_all_invoices() -> List[dict]:
+    """Returns a summary of every saved invoice (customer, contact,
+    totals, date) as plain dicts, newest first. Used by the invoice
+    history screen. Doesn't include line items — open the saved PDF
+    for the full breakdown."""
+    conn = get_connection()
+    try:
+        rows = conn.execute(
+            "SELECT * FROM invoices ORDER BY invoice_number DESC"
+        ).fetchall()
+        return [dict(row) for row in rows]
+    finally:
+        conn.close()
+
+
 def save_invoice(invoice: Invoice) -> int:
     """Saves the invoice + line items and deducts stock, all in one
     transaction. Connection always closes via finally, success or not."""

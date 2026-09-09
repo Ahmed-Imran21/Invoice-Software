@@ -117,6 +117,26 @@ def generate_invoice_pdf(invoice: Invoice) -> str:
     return filepath
 
 
+def get_invoice_pdf_path(invoice_number) -> str:
+    """Returns where a given invoice's PDF should be, regardless of
+    whether it's been generated yet."""
+    return os.path.join(INVOICES_DIR, f"invoice_{invoice_number}.pdf")
+
+
+def open_pdf_for_viewing(filepath: str):
+    """Opens a PDF to look at (not print) — used by the invoice history
+    screen. Different from open_for_printing: this never sends the file
+    straight to a printer."""
+    if sys.platform == "win32":
+        os.startfile(filepath)  # no "print" verb — just opens in the default viewer
+        return
+
+    opener = shutil.which("xdg-open") or shutil.which("open")
+    if opener is None:
+        raise RuntimeError(f"No PDF viewer found. The file is at:\n{filepath}")
+    subprocess.run([opener, filepath], check=True)
+
+
 def open_for_printing(filepath: str) -> str:
     """
     Sends the PDF to print (Windows) or opens it in a viewer as a

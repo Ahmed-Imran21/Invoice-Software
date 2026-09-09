@@ -1,7 +1,8 @@
 """
 main.py
-The entry point of the app. Shows a simple home screen with two big
-buttons: Inventory and Make Invoice. Run this file to start the app.
+The entry point of the app. Shows a simple home screen with three big
+buttons: Inventory, Make Invoice, and Invoice History. Run this file
+to start the app.
 """
 
 import tkinter as tk
@@ -10,12 +11,9 @@ from tkinter import messagebox
 import database
 from config import APP_TITLE, ICON_PATH
 from inventory_screen import InventoryScreen
-import ui_style as style
 from invoice_screen import InvoiceScreen
-
-# invoice_screen isn't built yet — import it once it exists, then
-# uncomment the "Make Invoice" button logic below.
-# from invoice_screen import InvoiceScreen
+from invoice_history_screen import InvoiceHistoryScreen
+import ui_style as style
 
 
 class App(tk.Tk):
@@ -24,18 +22,15 @@ class App(tk.Tk):
         self.title(APP_TITLE)
         self.geometry("900x600")
         self.configure(bg=style.COLOR_BG)
-        style.init_scaling(self)
+        style.init_scaling(self)  # must come before any screen is built
 
-        # Set the window/taskbar icon, if present
         try:
             self.iconbitmap(ICON_PATH)
         except tk.TclError:
-            pass  # icon file not ready yet — fine during development
+            pass
 
         self.current_screen = None
         self._show_home()
-
-    # ------------------------------------------------------------------
 
     def _clear_screen(self):
         if self.current_screen is not None:
@@ -51,7 +46,7 @@ class App(tk.Tk):
         tk.Label(
             home, text=APP_TITLE, font=style.FONTS["title"],
             bg=style.COLOR_BG, fg=style.COLOR_TEXT
-        ).pack(pady=(80, 40))
+        ).pack(pady=(60, 40))
 
         button_frame = tk.Frame(home, bg=style.COLOR_BG)
         button_frame.pack()
@@ -64,6 +59,10 @@ class App(tk.Tk):
             button_frame, "🧾 Make Invoice", self._show_invoice, style.COLOR_SUCCESS
         ).grid(row=0, column=1, padx=20)
 
+        style.make_big_nav_button(
+            button_frame, "📜 Invoice History", self._show_history, "#6a1b9a"
+        ).grid(row=0, column=2, padx=20)
+
         self.current_screen = home
 
     def _show_inventory(self):
@@ -71,10 +70,14 @@ class App(tk.Tk):
         self.current_screen = InventoryScreen(self, on_back=self._show_home)
         self.current_screen.pack(fill="both", expand=True)
 
-
     def _show_invoice(self):
         self._clear_screen()
         self.current_screen = InvoiceScreen(self, on_back=self._show_home)
+        self.current_screen.pack(fill="both", expand=True)
+
+    def _show_history(self):
+        self._clear_screen()
+        self.current_screen = InvoiceHistoryScreen(self, on_back=self._show_home)
         self.current_screen.pack(fill="both", expand=True)
 
 

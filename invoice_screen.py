@@ -3,7 +3,8 @@ invoice_screen.py
 The invoice creation screen: pick items, set quantity, apply discount%
 and tax%, see live totals, then save + print. Saving automatically
 deducts stock (handled by database.save_invoice()). Quantity entry
-and errors use the bigger custom dialogs from dialogs.py.
+and errors use the bigger custom dialogs from dialogs.py. Includes the
+Paid Amount field and live khata (previous balance) preview.
 """
 
 import tkinter as tk
@@ -242,9 +243,6 @@ class InvoiceScreen(tk.Frame):
             prepared_by="",
         )
 
-        # Live preview of the khata balance — the real, saved value is
-        # resolved again inside database.save_invoice() at save time,
-        # this is just so the user can see it before committing.
         existing_customer = database.get_customer_by_contact(invoice.customer_contact)
         invoice.prev_balance = existing_customer.current_balance if existing_customer else 0.0
 
@@ -274,7 +272,6 @@ class InvoiceScreen(tk.Frame):
     # ------------------------------------------------------------------
     # SAVE + PRINT
     # ------------------------------------------------------------------
-
 
     def _save_and_print(self):
         if not self.invoice_lines:

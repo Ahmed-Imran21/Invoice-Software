@@ -2,7 +2,9 @@
 invoice_generator.py
 Builds the printable invoice PDF, saves a copy, and sends it to print.
 Errors are raised with clear messages instead of failing silently, so
-the UI layer can show the user exactly what went wrong.
+the UI layer can show the user exactly what went wrong. Includes the
+khata (Previous Balance / Current Balance) breakdown when the customer
+has a contact number on file.
 """
 
 import os
@@ -107,8 +109,6 @@ def generate_invoice_pdf(invoice: Invoice) -> str:
     c.drawRightString(width - margin, y, f"{invoice.invoice_balance:,.2f}")
     y -= 5.5 * mm
 
-    # Only show the khata (running balance) lines if this customer is
-    # actually being tracked — i.e. they have a contact number on file.
     if invoice.customer_contact:
         c.drawString(width - margin - 55 * mm, y, "Previous Balance")
         c.drawRightString(width - margin, y, f"{invoice.prev_balance:,.2f}")
@@ -126,7 +126,6 @@ def generate_invoice_pdf(invoice: Invoice) -> str:
     c.setFont("Helvetica-Oblique", 7)
     c.drawString(margin, y, "Items only replaceable/returnable within 7 days with original bill.")
 
-
     c.save()
     return filepath
 
@@ -142,7 +141,7 @@ def open_pdf_for_viewing(filepath: str):
     screen. Different from open_for_printing: this never sends the file
     straight to a printer."""
     if sys.platform == "win32":
-        os.startfile(filepath)  # no "print" verb — just opens in the default viewer
+        os.startfile(filepath)
         return
 
     opener = shutil.which("xdg-open") or shutil.which("open")
@@ -159,13 +158,9 @@ def open_for_printing(filepath: str) -> str:
     caller can show it to the user instead of assuming it worked.
     """
     if sys.platform == "win32":
-        # Sends straight to the default printer without opening a dialog.
         os.startfile(filepath, "print")
         return "Sent to your default printer."
 
-    # We're on Linux/Mac — this only matters during development testing,
-    # since the real deployment target is Windows. There's no direct
-    # "print" equivalent here, so we just open the PDF.
     opener = shutil.which("xdg-open") or shutil.which("open")
     if opener is None:
         raise RuntimeError(

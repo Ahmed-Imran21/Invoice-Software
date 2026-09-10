@@ -98,8 +98,13 @@ class InvoiceScreen(tk.Frame):
         form.pack(fill="x", pady=5)
         self.customer_name_var = tk.StringVar()
         self.customer_contact_var = tk.StringVar()
+        self.customer_contact_var.trace_add("write", lambda *_: self._on_contact_changed())
         self._make_form_row(form, "Customer Name", self.customer_name_var)
         self._make_form_row(form, "Contact", self.customer_contact_var)
+
+        self.prev_balance_label = style.make_label(form, "", bold=True)
+        self.prev_balance_label.configure(fg=style.COLOR_DANGER)
+        self.prev_balance_label.pack(anchor="w", pady=(4, 0))
 
         percent_frame = tk.Frame(panel, bg=style.COLOR_BG)
         percent_frame.pack(fill="x", pady=10)
@@ -112,14 +117,24 @@ class InvoiceScreen(tk.Frame):
         self._make_percent_field(percent_frame, "Discount %", self.discount_var)
         self._make_percent_field(percent_frame, "Tax %", self.tax_var)
 
+        paid_frame = tk.Frame(panel, bg=style.COLOR_BG)
+        paid_frame.pack(fill="x", pady=(0, 5))
+        self.paid_amount_var = tk.StringVar(value="0")
+        self.paid_amount_var.trace_add("write", lambda *_: self._recalculate_totals())
+        self._make_form_row(paid_frame, "Paid Amount", self.paid_amount_var)
+
         self.totals_frame = tk.Frame(panel, bg=style.COLOR_BG)
         self.totals_frame.pack(fill="x", pady=10)
         self.totals_labels = {}
-        for key in ["Gross Total", "Discount", "Tax", "Net Total"]:
+        for key in ["Gross Total", "Discount", "Tax", "Net Total", "This Invoice Balance",
+                    "Previous Balance (Khata)", "New Total Balance"]:
             row = tk.Frame(self.totals_frame, bg=style.COLOR_BG)
             row.pack(fill="x")
             style.make_label(row, key).pack(side="left")
-            value_label = style.make_label(row, "0.00", bold=(key == "Net Total"))
+            highlight = key in ("Net Total", "New Total Balance")
+            value_label = style.make_label(row, "0.00", bold=highlight)
+            if key == "New Total Balance":
+                value_label.configure(fg=style.COLOR_DANGER)
             value_label.pack(side="right")
             self.totals_labels[key] = value_label
 
@@ -210,7 +225,12 @@ class InvoiceScreen(tk.Frame):
         except ValueError:
             discount, tax = 0.0, 0.0
 
-        return Invoice(
+        try:
+            paid = float(self.paid_amount_var.get() or 0)
+        except ValueError:
+            paid = 0.0
+
+        invoice = Invoice(
             customer_name=self.customer_name_var.get().strip(),
             customer_address="",
             customer_contact=self.customer_contact_var.get().strip(),
@@ -218,9 +238,28 @@ class InvoiceScreen(tk.Frame):
             items=self.invoice_lines,
             discount_percent=discount,
             tax_percent=tax,
-            paid_amount=0.0,
+            paid_amount=paid,
             prepared_by="",
         )
+
+        # Live preview of the khata balance — the real, saved value is
+        # resolved again inside database.save_invoice() at save time,
+        # this is just so the user can see it before committing.
+        existing_customer = database.get_customer_by_contact(invoice.customer_contact)
+        invoice.prev_balance = existing_customer.current_balance if existing_customer else 0.0
+
+        return invoice
+
+    def _on_contact_changed(self):
+        contact = self.customer_contact_var.get().strip()
+        customer = database.get_customer_by_contact(contact) if contact else None
+        if customer and customer.current_balance > 0:
+            self.prev_balance_label.config(
+                text=f"⚠ This customer already owes {customer.current_balance:.2f} from before."
+            )
+        else:
+            self.prev_balance_label.config(text="")
+        self._recalculate_totals()
 
     def _recalculate_totals(self):
         invoice = self._build_invoice_object()
@@ -228,10 +267,14 @@ class InvoiceScreen(tk.Frame):
         self.totals_labels["Discount"].config(text=f"-{invoice.discount_amount:.2f}")
         self.totals_labels["Tax"].config(text=f"+{invoice.tax_amount:.2f}")
         self.totals_labels["Net Total"].config(text=f"{invoice.net_total:.2f}")
+        self.totals_labels["This Invoice Balance"].config(text=f"{invoice.invoice_balance:.2f}")
+        self.totals_labels["Previous Balance (Khata)"].config(text=f"{invoice.prev_balance:.2f}")
+        self.totals_labels["New Total Balance"].config(text=f"{invoice.crnt_balance:.2f}")
 
     # ------------------------------------------------------------------
     # SAVE + PRINT
     # ------------------------------------------------------------------
+
 
     def _save_and_print(self):
         if not self.invoice_lines:
@@ -262,6 +305,8 @@ class InvoiceScreen(tk.Frame):
         self.invoice_lines = []
         self.customer_name_var.set("")
         self.customer_contact_var.set("")
+        self.paid_amount_var.set("0")
+        self.prev_balance_label.config(text="")
         self._refresh_invoice_table()
         self._refresh_catalog_list()
         self._recalculate_totals()

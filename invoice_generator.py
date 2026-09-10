@@ -103,15 +103,29 @@ def generate_invoice_pdf(invoice: Invoice) -> str:
     c.drawRightString(width - margin, y, f"{invoice.paid_amount:,.2f}")
     y -= 5.5 * mm
 
-    c.setFont("Helvetica-Bold", 10)
-    c.setFillColor(colors.HexColor("#c62828"))
-    c.drawString(width - margin - 55 * mm, y, "Balance Due")
-    c.drawRightString(width - margin, y, f"{invoice.balance:,.2f}")
-    c.setFillColor(colors.black)
-    y -= 10 * mm
+    c.drawString(width - margin - 55 * mm, y, "This Invoice Balance")
+    c.drawRightString(width - margin, y, f"{invoice.invoice_balance:,.2f}")
+    y -= 5.5 * mm
+
+    # Only show the khata (running balance) lines if this customer is
+    # actually being tracked — i.e. they have a contact number on file.
+    if invoice.customer_contact:
+        c.drawString(width - margin - 55 * mm, y, "Previous Balance")
+        c.drawRightString(width - margin, y, f"{invoice.prev_balance:,.2f}")
+        y -= 6 * mm
+
+        c.setFont("Helvetica-Bold", 10)
+        c.setFillColor(colors.HexColor("#c62828"))
+        c.drawString(width - margin - 55 * mm, y, "Current Balance")
+        c.drawRightString(width - margin, y, f"{invoice.crnt_balance:,.2f}")
+        c.setFillColor(colors.black)
+        y -= 10 * mm
+    else:
+        y -= 4 * mm
 
     c.setFont("Helvetica-Oblique", 7)
     c.drawString(margin, y, "Items only replaceable/returnable within 7 days with original bill.")
+
 
     c.save()
     return filepath

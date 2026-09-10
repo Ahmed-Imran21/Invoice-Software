@@ -14,6 +14,7 @@ from config import APP_TITLE, ICON_PATH
 from inventory_screen import InventoryScreen
 from invoice_screen import InvoiceScreen
 from invoice_history_screen import InvoiceHistoryScreen
+from customer_ledger_screen import CustomerLedgerScreen
 import ui_style as style
 
 
@@ -54,15 +55,19 @@ class App(tk.Tk):
 
         style.make_big_nav_button(
             button_frame, "📦 Inventory", self._show_inventory, style.COLOR_PRIMARY
-        ).grid(row=0, column=0, padx=20)
+        ).grid(row=0, column=0, padx=20, pady=10)
 
         style.make_big_nav_button(
             button_frame, "🧾 Make Invoice", self._show_invoice, style.COLOR_SUCCESS
-        ).grid(row=0, column=1, padx=20)
+        ).grid(row=0, column=1, padx=20, pady=10)
 
         style.make_big_nav_button(
             button_frame, "📜 Invoice History", self._show_history, "#6a1b9a"
-        ).grid(row=0, column=2, padx=20)
+        ).grid(row=1, column=0, padx=20, pady=10)
+
+        style.make_big_nav_button(
+            button_frame, "📒 Customer Ledger", self._show_ledger, "#ef6c00"
+        ).grid(row=1, column=1, padx=20, pady=10)
 
         self.current_screen = home
 
@@ -79,6 +84,11 @@ class App(tk.Tk):
     def _show_history(self):
         self._clear_screen()
         self.current_screen = InvoiceHistoryScreen(self, on_back=self._show_home)
+        self.current_screen.pack(fill="both", expand=True)
+
+    def _show_ledger(self):
+        self._clear_screen()
+        self.current_screen = CustomerLedgerScreen(self, on_back=self._show_home)
         self.current_screen.pack(fill="both", expand=True)
 
 

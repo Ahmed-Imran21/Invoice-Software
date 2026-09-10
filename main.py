@@ -1,8 +1,8 @@
 """
 main.py
-The entry point of the app. Shows a simple home screen with three big
-buttons: Inventory, Make Invoice, and Invoice History. Run this file
-to start the app.
+The entry point of the app. Shows a simple home screen with four big
+buttons: Inventory, Make Invoice, Invoice History, and Customer Ledger.
+Run this file to start the app.
 """
 
 import tkinter as tk

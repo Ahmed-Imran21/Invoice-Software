@@ -17,14 +17,10 @@ class CustomerLedgerScreen(tk.Frame):
     def __init__(self, parent, on_back=None):
         super().__init__(parent, bg=style.COLOR_BG)
         self.on_back = on_back
-        self.selected_customer = None  # a Customer object, not just an id
+        self.selected_customer = None
 
         self._build_layout()
         self._refresh_list()
-
-    # ------------------------------------------------------------------
-    # LAYOUT
-    # ------------------------------------------------------------------
 
     def _build_layout(self):
         top_bar = tk.Frame(self, bg=style.COLOR_BG)
@@ -67,10 +63,6 @@ class CustomerLedgerScreen(tk.Frame):
             action_frame, "💵 Record Payment", self._record_payment, color=style.COLOR_SUCCESS
         ).pack(side="left", padx=5)
 
-    # ------------------------------------------------------------------
-    # DATA
-    # ------------------------------------------------------------------
-
     def _refresh_list(self):
         search_text = self.search_var.get().strip().lower()
         self.tree.delete(*self.tree.get_children())
@@ -88,10 +80,6 @@ class CustomerLedgerScreen(tk.Frame):
     def _on_select(self, event):
         selected = self.tree.selection()
         self.selected_customer = self.customers_by_row.get(selected[0]) if selected else None
-
-    # ------------------------------------------------------------------
-    # ACTIONS
-    # ------------------------------------------------------------------
 
     def _record_payment(self):
         if self.selected_customer is None:

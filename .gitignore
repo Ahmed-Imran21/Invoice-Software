@@ -19,6 +19,7 @@ dist/
 # Local data — this is real business data, not code
 data/inventory.db
 data/invoices/
+data/backups/*.db
 
 # OS clutter
 Thumbs.db

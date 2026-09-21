@@ -5,6 +5,7 @@ Edit this file to rebrand the invoice or change how it behaves — no other
 file should need touching for these kinds of changes.
 """
 
+import sys
 from pathlib import Path
 
 # ---------- Business info (shown on every invoice) ----------
@@ -13,11 +14,20 @@ COMPANY_ADDRESS = "Plot No, Street, City"
 COMPANY_CONTACT = "0300-0000000"
 
 # ---------- File paths ----------
-BASE_DIR = Path(__file__).resolve().parent
+# When PyInstaller runs a --onefile build, __file__ resolves inside the
+# temporary _MEIPASS extraction folder — a new, throwaway directory every
+# launch. Writable data (database/invoices/backups) must live next to the
+# actual .exe instead, or it would silently vanish between runs.
+if getattr(sys, "frozen", False):
+    BASE_DIR = Path(sys.executable).resolve().parent
+    ASSETS_DIR = Path(sys._MEIPASS) / "assets"
+else:
+    BASE_DIR = Path(__file__).resolve().parent
+    ASSETS_DIR = BASE_DIR / "assets"
+
 DATA_DIR = BASE_DIR / "data"
 DATABASE_PATH = DATA_DIR / "inventory.db"
 INVOICES_DIR = DATA_DIR / "invoices"
-ASSETS_DIR = BASE_DIR / "assets"
 ICON_PATH = ASSETS_DIR / "icon.ico"
 LOGO_PATH = ASSETS_DIR / "logo.png"
 

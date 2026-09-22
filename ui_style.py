@@ -8,6 +8,7 @@ text size live, instead of staying frozen at the size it was created.
 
 import tkinter as tk
 import tkinter.font as tkfont
+from tkinter import ttk
 
 FONT_FAMILY = "Segoe UI"
 
@@ -127,3 +128,69 @@ def apply_treeview_style(style):
     style.configure("Treeview.Heading", font=FONTS["table_heading"])
     if style not in _treeview_styles:
         _treeview_styles.append(style)
+
+
+class ScrollableFrame(tk.Frame):
+    """A vertically scrollable container (Canvas + Scrollbar + inner Frame),
+    since tkinter has no built-in one. Needed because pack() doesn't make
+    overflowing content visible or scrollable on its own — it silently
+    compresses whatever doesn't fit down to near-zero height instead, which
+    is exactly what happened to the invoice screen's Save & Print button
+    at a large font scale.
+
+    Build content inside `.interior`, then call `.enable_mousewheel()`
+    once everything has been added. When the content is shorter than the
+    visible area it stretches to fill it (looks the same as a plain pack()
+    layout); when it's taller, it scrolls instead of getting crushed.
+    Mouse-wheel scrolling works anywhere over the scrollable area except
+    directly over a Treeview, which keeps scrolling its own rows."""
+
+    def __init__(self, parent, bg=None):
+        bg = bg or COLOR_BG
+        super().__init__(parent, bg=bg)
+
+        self.canvas = tk.Canvas(self, bg=bg, highlightthickness=0)
+        self.scrollbar = ttk.Scrollbar(self, orient="vertical", command=self.canvas.yview)
+        self.canvas.configure(yscrollcommand=self.scrollbar.set)
+        self.canvas.pack(side="left", fill="both", expand=True)
+        self.scrollbar.pack(side="right", fill="y")
+
+        self.interior = tk.Frame(self.canvas, bg=bg)
+        self._window_id = self.canvas.create_window((0, 0), window=self.interior, anchor="nw")
+
+        self.interior.bind("<Configure>", self._sync_scrollregion)
+        self.canvas.bind("<Configure>", self._sync_scrollregion)
+
+    def _sync_scrollregion(self, event=None):
+        self.canvas.update_idletasks()
+        canvas_width = self.canvas.winfo_width()
+        canvas_height = self.canvas.winfo_height()
+        content_height = self.interior.winfo_reqheight()
+        self.canvas.itemconfig(
+            self._window_id, width=canvas_width, height=max(content_height, canvas_height)
+        )
+        self.canvas.configure(scrollregion=self.canvas.bbox("all"))
+
+    def enable_mousewheel(self):
+        """Call once after all content has been added, so scroll wheel
+        input works anywhere over the scrollable area."""
+        self._bind_wheel_recursive(self.canvas)
+
+    def _bind_wheel_recursive(self, widget):
+        if isinstance(widget, ttk.Treeview):
+            return  # keep its own native row-by-row scrolling untouched
+        widget.bind("<MouseWheel>", self._on_mousewheel)
+        widget.bind("<Button-4>", self._on_mousewheel)
+        widget.bind("<Button-5>", self._on_mousewheel)
+        for child in widget.winfo_children():
+            self._bind_wheel_recursive(child)
+
+    def _on_mousewheel(self, event):
+        if event.num == 4:
+            delta = -1
+        elif event.num == 5:
+            delta = 1
+        else:
+            delta = -1 if event.delta > 0 else 1
+        self.canvas.yview_scroll(delta, "units")
+        return "break"

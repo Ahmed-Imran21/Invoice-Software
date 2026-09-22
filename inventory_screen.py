@@ -41,7 +41,11 @@ class InventoryScreen(tk.Frame):
 
         style.make_heading(top_bar, "Inventory").pack(side="left", padx=20)
 
-        search_frame = tk.Frame(self, bg=style.COLOR_BG)
+        scroll = style.ScrollableFrame(self)
+        scroll.pack(fill="both", expand=True)
+        content = scroll.interior
+
+        search_frame = tk.Frame(content, bg=style.COLOR_BG)
         search_frame.pack(fill="x", padx=20, pady=(0, 10))
 
         style.make_label(search_frame, "Search:").pack(side="left")
@@ -49,7 +53,7 @@ class InventoryScreen(tk.Frame):
         self.search_var.trace_add("write", lambda *_: self._refresh_item_list())
         style.make_entry(search_frame, textvariable=self.search_var, width=30).pack(side="left", padx=10)
 
-        list_frame = tk.Frame(self)
+        list_frame = tk.Frame(content)
         list_frame.pack(fill="both", expand=True, padx=20, pady=10)
 
         columns = ("code", "name", "unit", "rate", "stock")
@@ -67,7 +71,7 @@ class InventoryScreen(tk.Frame):
 
         style.apply_treeview_style(ttk.Style())
 
-        action_frame = tk.Frame(self, bg=style.COLOR_BG)
+        action_frame = tk.Frame(content, bg=style.COLOR_BG)
         action_frame.pack(fill="x", padx=20, pady=15)
 
         style.make_button(
@@ -79,6 +83,8 @@ class InventoryScreen(tk.Frame):
         style.make_button(
             action_frame, "＋ New Item", self._new_item, color=style.COLOR_PRIMARY
         ).pack(side="left", padx=5)
+
+        scroll.enable_mousewheel()
 
     # ------------------------------------------------------------------
     # DATA
@@ -151,7 +157,7 @@ class NewItemDialog(tk.Toplevel):
         self.title("New Item")
         self.configure(bg=style.COLOR_BG)
         self.resizable(True, True)
-        self.minsize(360, 420)
+        self.minsize(360, 260)
 
         self.entries = {}
         fields = [
@@ -162,7 +168,17 @@ class NewItemDialog(tk.Toplevel):
             ("stock_qty", "Starting Stock Quantity"),
         ]
 
-        form = tk.Frame(self, bg=style.COLOR_BG)
+        # Packed first with side="bottom" so it always keeps its own space
+        # at the bottom of the dialog — it can never be pushed out of view
+        # by the form above it, no matter how tall that gets or how far
+        # the user has scrolled.
+        style.make_button(
+            self, "Save Item", self._save, color=style.COLOR_PRIMARY
+        ).pack(side="bottom", fill="x", padx=20, pady=20)
+
+        scroll = style.ScrollableFrame(self)
+        scroll.pack(side="top", fill="both", expand=True)
+        form = tk.Frame(scroll.interior, bg=style.COLOR_BG)
         form.pack(fill="both", expand=True, padx=20, pady=15)
 
         for key, label in fields:
@@ -171,13 +187,11 @@ class NewItemDialog(tk.Toplevel):
             entry.pack(fill="x")
             self.entries[key] = entry
 
-        style.make_button(
-            self, "Save Item", self._save, color=style.COLOR_PRIMARY
-        ).pack(pady=20, padx=20, fill="x")
+        scroll.enable_mousewheel()
 
         self.update_idletasks()
         width = max(self.winfo_reqwidth(), 360)
-        height = self.winfo_reqheight()
+        height = min(self.winfo_reqheight(), int(self.winfo_screenheight() * 0.85))
         ref = parent.winfo_toplevel()
         px = ref.winfo_rootx() + (ref.winfo_width() // 2) - (width // 2)
         py = ref.winfo_rooty() + (ref.winfo_height() // 2) - (height // 2)

@@ -39,14 +39,18 @@ class InvoiceHistoryScreen(tk.Frame):
             ).pack(side="left")
         style.make_heading(top_bar, "Invoice History").pack(side="left", padx=20)
 
-        search_frame = tk.Frame(self, bg=style.COLOR_BG)
+        scroll = style.ScrollableFrame(self)
+        scroll.pack(fill="both", expand=True)
+        content = scroll.interior
+
+        search_frame = tk.Frame(content, bg=style.COLOR_BG)
         search_frame.pack(fill="x", padx=20, pady=(0, 10))
         style.make_label(search_frame, "Search customer:").pack(side="left")
         self.search_var = tk.StringVar()
         self.search_var.trace_add("write", lambda *_: self._refresh_list())
         style.make_entry(search_frame, textvariable=self.search_var, width=30).pack(side="left", padx=10)
 
-        list_frame = tk.Frame(self)
+        list_frame = tk.Frame(content)
         list_frame.pack(fill="both", expand=True, padx=20, pady=10)
 
         columns = ("invoice_number", "customer_name", "customer_contact", "net_total", "invoice_date")
@@ -70,11 +74,13 @@ class InvoiceHistoryScreen(tk.Frame):
         scrollbar.pack(side="right", fill="y")
         style.apply_treeview_style(ttk.Style())
 
-        action_frame = tk.Frame(self, bg=style.COLOR_BG)
+        action_frame = tk.Frame(content, bg=style.COLOR_BG)
         action_frame.pack(fill="x", padx=20, pady=15)
         style.make_button(
             action_frame, "📄 View Invoice", self._view_invoice, color=style.COLOR_PRIMARY
         ).pack(side="left", padx=5)
+
+        scroll.enable_mousewheel()
 
     # ------------------------------------------------------------------
     # DATA

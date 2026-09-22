@@ -46,11 +46,16 @@ class InvoiceScreen(tk.Frame):
             ).pack(side="left")
         style.make_heading(top_bar, "Make Invoice").pack(side="left", padx=20)
 
-        body = tk.Frame(self, bg=style.COLOR_BG)
+        scroll = style.ScrollableFrame(self)
+        scroll.pack(fill="both", expand=True)
+
+        body = tk.Frame(scroll.interior, bg=style.COLOR_BG)
         body.pack(fill="both", expand=True, padx=20, pady=10)
 
         self._build_catalog_panel(body)
         self._build_invoice_panel(body)
+
+        scroll.enable_mousewheel()
 
     def _build_catalog_panel(self, parent):
         panel = tk.Frame(parent, bg=style.COLOR_BG)

@@ -1,0 +1,16 @@
+<svg width="256" height="256" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+  <rect x="0" y="0" width="256" height="256" rx="48" fill="#1565c0"/>
+
+  <g>
+    <polygon points="78,48 150,48 178,76 178,208 78,208" fill="#ffffff"/>
+    <polygon points="150,48 178,76 150,76" fill="#c7d9f0"/>
+
+    <rect x="96" y="100" width="64" height="10" rx="2" fill="#1565c0"/>
+    <rect x="96" y="124" width="64" height="10" rx="2" fill="#1565c0"/>
+    <rect x="96" y="148" width="40" height="10" rx="2" fill="#1565c0"/>
+  </g>
+
+  <circle cx="186" cy="186" r="40" fill="#2e7d32"/>
+  <rect x="179" y="166" width="14" height="40" rx="4" fill="#ffffff"/>
+  <rect x="166" y="179" width="40" height="14" rx="4" fill="#ffffff"/>
+</svg>

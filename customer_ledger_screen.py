@@ -113,6 +113,13 @@ class CustomerLedgerScreen(tk.Frame):
         except ValueError as e:
             dialogs.show_error(self, "Could Not Record Payment", str(e))
             return
+        except Exception as e:
+            dialogs.show_error(
+                self, "Could Not Record Payment",
+                f"The payment was NOT recorded and the balance is unchanged, "
+                f"because of an unexpected problem.\n\nError: {e}"
+            )
+            return
 
         messagebox.showinfo(
             "Payment Recorded",

@@ -224,6 +224,24 @@ class InvoiceScreen(tk.Frame):
                 values=(line.item_name, f"{line.qty:g}", f"{line.unit_rate:.2f}", f"{line.line_total:.2f}")
             )
 
+    def _first_invalid_number_field(self):
+        """Returns (label, raw_text) for the first of the numeric entry
+        fields that isn't a valid number, or None if they're all fine.
+        Blank counts as valid and means zero."""
+        for label, var in (
+            ("Discount %", self.discount_var),
+            ("Tax %", self.tax_var),
+            ("Paid Amount", self.paid_amount_var),
+        ):
+            raw = var.get().strip()
+            if not raw:
+                continue
+            try:
+                float(raw)
+            except ValueError:
+                return label, raw
+        return None
+
     def _build_invoice_object(self) -> Invoice:
         try:
             discount = float(self.discount_var.get() or 0)
@@ -283,12 +301,34 @@ class InvoiceScreen(tk.Frame):
             dialogs.show_error(self, "Empty Invoice", "Add at least one item before saving.")
             return
 
+        # _build_invoice_object() deliberately treats unparseable numbers as 0
+        # so the live totals preview doesn't nag while you're mid-typing. At
+        # save time that silence is dangerous — it would record an invoice
+        # with a different discount/tax/paid than what's on screen — so the
+        # fields get checked properly here before anything is written.
+        bad_field = self._first_invalid_number_field()
+        if bad_field is not None:
+            label, raw = bad_field
+            dialogs.show_error(
+                self, f"Check the {label}",
+                f"'{raw}' is not a valid number, so the invoice was not saved.\n\n"
+                f"Please correct the {label} and try again."
+            )
+            return
+
         invoice = self._build_invoice_object()
 
         try:
             invoice.invoice_id = database.save_invoice(invoice)
         except ValueError as e:
             dialogs.show_error(self, "Could Not Save Invoice", str(e))
+            return
+        except Exception as e:
+            dialogs.show_error(
+                self, "Could Not Save Invoice",
+                f"Nothing was saved and no stock was changed, because of an "
+                f"unexpected problem.\n\nError: {e}"
+            )
             return
 
         try:

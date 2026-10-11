@@ -127,9 +127,17 @@ class InventoryScreen(tk.Frame):
         qty = dialogs.ask_quantity(self, "Add Stock", "How much stock are you adding?", min_value=0.01)
         if qty is None:
             return
-        database.adjust_stock(self.selected_item_id, qty, reason="Manual Add")
-        self._refresh_item_list()
-        messagebox.showinfo("Done", "Stock added successfully.")
+        try:
+            database.adjust_stock(self.selected_item_id, qty, reason="Manual Add")
+            self._refresh_item_list()
+            messagebox.showinfo("Done", "Stock added successfully.")
+        except ValueError as e:
+            dialogs.show_error(self, "Could Not Add Stock", str(e))
+        except Exception as e:
+            dialogs.show_error(
+                self, "Could Not Add Stock",
+                f"The stock was not changed because of an unexpected problem.\n\nError: {e}"
+            )
 
     def _subtract_stock(self):
         if not self._require_selection():
@@ -143,6 +151,11 @@ class InventoryScreen(tk.Frame):
             messagebox.showinfo("Done", "Stock updated successfully.")
         except ValueError as e:
             dialogs.show_error(self, "Not Enough Stock", str(e))
+        except Exception as e:
+            dialogs.show_error(
+                self, "Could Not Update Stock",
+                f"The stock was not changed because of an unexpected problem.\n\nError: {e}"
+            )
 
     def _new_item(self):
         NewItemDialog(self, on_saved=self._refresh_item_list)
@@ -221,6 +234,12 @@ class NewItemDialog(tk.Toplevel):
                 f"'{code}' is already in the system. Please enter a different item code."
             )
             return  # dialog stays open, fields untouched — just fix the code and retry
+        except Exception as e:
+            dialogs.show_error(
+                self, "Could Not Save Item",
+                f"The item was not saved because of an unexpected problem.\n\nError: {e}"
+            )
+            return  # keep the form open so the typed details aren't lost
 
         self.on_saved()
         self.destroy()

@@ -1,0 +1,31 @@
+# PyInstaller version resource for StockInvoiceManager.exe.
+# This is what Windows shows under right-click > Properties > Details,
+# and what the taskbar/Task Manager use as the friendly description.
+# Referenced from StockInvoiceManager.spec via version='version_info.txt'.
+VSVersionInfo(
+  ffi=FixedFileInfo(
+    filevers=(1, 0, 0, 0),
+    prodvers=(1, 0, 0, 0),
+    mask=0x3f,
+    flags=0x0,
+    OS=0x40004,
+    fileType=0x1,
+    subtype=0x0,
+    date=(0, 0)
+  ),
+  kids=[
+    StringFileInfo(
+      [
+      StringTable(
+        '040904B0',
+        [StringStruct('CompanyName', 'Ittefaq Plastic Industries'),
+        StringStruct('FileDescription', 'Stock & Invoice Manager'),
+        StringStruct('FileVersion', '1.0.0.0'),
+        StringStruct('InternalName', 'StockInvoiceManager'),
+        StringStruct('OriginalFilename', 'StockInvoiceManager.exe'),
+        StringStruct('ProductName', 'Ittefaq Plastic Industries - Stock & Invoice Manager'),
+        StringStruct('ProductVersion', '1.0.0.0')])
+      ]),
+    VarFileInfo([VarStruct('Translation', [1033, 1200])])
+  ]
+)

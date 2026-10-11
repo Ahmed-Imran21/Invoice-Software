@@ -9,9 +9,11 @@ import sys
 from pathlib import Path
 
 # ---------- Business info (shown on every invoice) ----------
-COMPANY_NAME = "Your Company Name"
-COMPANY_ADDRESS = "Plot No, Street, City"
-COMPANY_CONTACT = "0300-0000000"
+# Single source of truth for the invoice header — invoice_generator.py reads
+# these, so rebranding never means touching PDF layout code.
+COMPANY_NAME = "ITTEFAQ PLASTIC INDUSTRIES"
+COMPANY_ADDRESS = "PLOT NO 261, SARAN STOP, KAHUTA ROAD, MODEL TOWN ISLAMABAD"
+COMPANY_CONTACT = "M IMRAN 0300-8514000, 0321-5178240"
 
 # ---------- File paths ----------
 # When PyInstaller runs a --onefile build, __file__ resolves inside the
@@ -48,4 +50,9 @@ DISCOUNT_APPLIED_BEFORE_TAX = True  # matches our earlier decision: discount fir
 STARTING_INVOICE_NUMBER = 1  # used only if no invoices exist yet in the database
 
 # ---------- UI ----------
-APP_TITLE = "Stock & Invoice Manager"
+# APP_NAME is the product; APP_TITLE is what the window titlebar shows.
+# They're kept separate because the home screen prints COMPANY_NAME large
+# and APP_NAME underneath it — the combined string is too wide to render
+# as a single heading at the app's font scale.
+APP_NAME = "Stock & Invoice Manager"
+APP_TITLE = f"{COMPANY_NAME} - {APP_NAME}"

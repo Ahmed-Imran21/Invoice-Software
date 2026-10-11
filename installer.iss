@@ -1,5 +1,5 @@
 ; installer.iss
-; Inno Setup script for Stock & Invoice Manager.
+; Inno Setup script for the Ittefaq Plastic Industries Stock & Invoice Manager.
 ;
 ; Build with:
 ;   "%LOCALAPPDATA%\Programs\Inno Setup 6\ISCC.exe" installer.iss
@@ -13,11 +13,16 @@
 ; there would make the app fail at startup the moment it tried to create
 ; that data folder.
 
-#define AppName "Stock & Invoice Manager"
+; AppName is what the wizard, Start Menu group and shortcuts show.
+; AppExeName stays "StockInvoiceManager.exe" deliberately — it is an
+; internal filename the owner never sees, and keeping it stable avoids
+; churning the .spec, the [Files]/[Icons] references and the existing
+; install's upgrade path.
+#define AppName "Ittefaq Plastic Industries - Stock & Invoice Manager"
+#define AppShortName "Ittefaq Stock & Invoice Manager"
 #define AppExeName "StockInvoiceManager.exe"
 #define AppVersion "1.0.0"
-; Change AppPublisher to the real business name before handing this out.
-#define AppPublisher "Stock & Invoice Manager"
+#define AppPublisher "Ittefaq Plastic Industries"
 
 [Setup]
 ; AppId must stay fixed forever — it is how Windows recognises an existing
@@ -28,14 +33,15 @@ AppVersion={#AppVersion}
 AppVerName={#AppName} {#AppVersion}
 AppPublisher={#AppPublisher}
 DefaultDirName={localappdata}\Programs\StockInvoiceManager
-DefaultGroupName={#AppName}
+; Start Menu folder is grouped under the company, the usual Windows convention.
+DefaultGroupName={#AppPublisher}
 DisableProgramGroupPage=yes
 ; Per-user install: no UAC prompt, and the install folder stays writable.
 PrivilegesRequired=lowest
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 OutputDir=dist\installer
-OutputBaseFilename=StockInvoiceManager-Setup
+OutputBaseFilename=IttefaqPlasticIndustries-StockInvoiceManager-Setup
 Compression=lzma2/max
 SolidCompression=yes
 WizardStyle=modern
@@ -58,13 +64,15 @@ Source: "dist\{#AppExeName}"; DestDir: "{app}"; Flags: ignoreversion
 [Icons]
 ; No IconFilename is given, so each shortcut uses the icon embedded in the
 ; .exe itself.
-Name: "{group}\{#AppName}"; Filename: "{app}\{#AppExeName}"
+; Shortcuts use the shorter name so they stay readable on the Desktop and
+; in the Start Menu; the full name is kept for the wizard and Apps & Features.
+Name: "{group}\{#AppShortName}"; Filename: "{app}\{#AppExeName}"
 Name: "{group}\Invoice Data Folder"; Filename: "{app}\data"; Comment: "Where the database, invoice PDFs and daily backups are kept — copy this whole folder to back up."
-Name: "{group}\{cm:UninstallProgram,{#AppName}}"; Filename: "{uninstallexe}"
-Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExeName}"; Tasks: desktopicon
+Name: "{group}\{cm:UninstallProgram,{#AppShortName}}"; Filename: "{uninstallexe}"
+Name: "{autodesktop}\{#AppShortName}"; Filename: "{app}\{#AppExeName}"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\{#AppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(AppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\{#AppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(AppShortName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
 
 ; NOTE: there is no [UninstallDelete] section on purpose. Uninstalling removes
 ; only the files this installer put there — the "data" folder the app created

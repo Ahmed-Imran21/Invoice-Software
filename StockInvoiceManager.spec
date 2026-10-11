@@ -41,4 +41,7 @@ exe = EXE(
     # Embeds the icon in the .exe itself, so Explorer/taskbar/shortcuts
     # show it without the app even running.
     icon=['assets/icon.ico'],
+    # Puts the company/product name into the exe's Windows version
+    # resource (right-click > Properties > Details).
+    version='version_info.txt',
 )

@@ -10,7 +10,7 @@ from tkinter import messagebox
 
 import database
 import backup
-from config import APP_TITLE, ICON_PATH, DATABASE_PATH
+from config import APP_TITLE, APP_NAME, COMPANY_NAME, ICON_PATH, DATABASE_PATH
 from inventory_screen import InventoryScreen
 from invoice_screen import InvoiceScreen
 from invoice_history_screen import InvoiceHistoryScreen
@@ -49,10 +49,18 @@ class App(tk.Tk):
         home = tk.Frame(self, bg=style.COLOR_BG)
         home.pack(fill="both", expand=True)
 
+        # Company name as the headline, product name underneath. Kept on two
+        # lines because the combined string is too wide to fit the window at
+        # the title font size.
         tk.Label(
-            home, text=APP_TITLE, font=style.FONTS["title"],
-            bg=style.COLOR_BG, fg=style.COLOR_TEXT
-        ).pack(pady=(60, 40))
+            home, text=COMPANY_NAME, font=style.FONTS["title"],
+            bg=style.COLOR_BG, fg=style.COLOR_PRIMARY
+        ).pack(pady=(55, 0))
+
+        tk.Label(
+            home, text=APP_NAME, font=style.FONTS["heading"],
+            bg=style.COLOR_BG, fg=style.COLOR_MUTED_TEXT
+        ).pack(pady=(4, 38))
 
         button_frame = tk.Frame(home, bg=style.COLOR_BG)
         button_frame.pack()
